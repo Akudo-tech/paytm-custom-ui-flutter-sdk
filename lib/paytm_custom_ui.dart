@@ -90,6 +90,10 @@ class PaytmCustomUi {
     }).toList();
     return upiApps;
   }
+
+  Future setStaging() async {
+    return await PaytmCustomUiPlatform.instance.setStaging();
+  }
 }
 
 class UpiApp {
