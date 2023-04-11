@@ -5,6 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'dart:typed_data';
 
 import 'paytm_custom_ui_platform_interface.dart';
 
@@ -33,42 +34,53 @@ class PaytmCustomUi {
         .doUpiIntentPayment(mid, orderId, txnToken, amount, paymentFlow, appId);
   }
 
-  Future doNBPayment(
+  Future doNBPayment(String mid, String orderId, String txnToken, num amount,
+      String paymentFlow, String bankCode, String callbackURL) {
+    return PaytmCustomUiPlatform.instance.doNBPayment(
+        mid, orderId, txnToken, amount, paymentFlow, bankCode, callbackURL);
+  }
+
+  Future doCardPayment(
     String mid,
     String orderId,
     String txnToken,
     num amount,
+    String paymentMode,
     String paymentFlow,
-    String bankCode,
-    String callbackURL
+    String? cardNumber,
+    String? cardId,
+    String? cardCvv,
+    String? cardExpiry,
+    String? bankCode,
+    String? channelCode,
+    String authMode,
+    String? emiPlanId,
+    bool shouldSaveCard,
+    bool isEligibleForCoFT,
+    bool isUserConsentGiven,
+    bool isCardPTCInfoRequired,
+    String callbackURL,
   ) {
-    return PaytmCustomUiPlatform.instance
-        .doNBPayment(mid, orderId, txnToken, amount, paymentFlow, bankCode,callbackURL);
-  }
-
-  Future doCardPayment(
-      String mid,
-      String orderId,
-      String txnToken,
-      num amount,
-      String paymentMode,
-      String paymentFlow,
-      String? cardNumber,
-      String? cardId,
-      String? cardCvv,
-      String? cardExpiry,
-      String? bankCode,
-      String? channelCode,
-      String authMode,
-      String? emiPlanId,
-      bool shouldSaveCard,
-      bool isEligibleForCoFT,
-      bool isUserConsentGiven,
-      bool isCardPTCInfoRequired,
-      String callbackURL,
-
-      ) {
-    return PaytmCustomUiPlatform.instance.doCardPayment(mid, orderId, txnToken, amount, paymentMode, paymentFlow, cardNumber, cardId, cardCvv, cardExpiry, bankCode, channelCode, authMode, emiPlanId, shouldSaveCard, isEligibleForCoFT, isUserConsentGiven, isCardPTCInfoRequired, callbackURL);
+    return PaytmCustomUiPlatform.instance.doCardPayment(
+        mid,
+        orderId,
+        txnToken,
+        amount,
+        paymentMode,
+        paymentFlow,
+        cardNumber,
+        cardId,
+        cardCvv,
+        cardExpiry,
+        bankCode,
+        channelCode,
+        authMode,
+        emiPlanId,
+        shouldSaveCard,
+        isEligibleForCoFT,
+        isUserConsentGiven,
+        isCardPTCInfoRequired,
+        callbackURL);
   }
 
   Future<List<UpiApp>> getUpiApps() async {
