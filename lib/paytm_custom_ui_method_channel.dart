@@ -49,9 +49,8 @@ class MethodChannelPaytmCustomUi extends PaytmCustomUiPlatform {
     bool isEligibleForCoFT,
     bool isUserConsentGiven,
     bool isCardPTCInfoRequired,
-      String callbackURL,
-
-      ) async {
+    String callbackURL,
+  ) async {
     return await methodChannel.invokeMethod('doCardPayment', {
       'mid': mid,
       'orderId': orderId,
@@ -71,51 +70,57 @@ class MethodChannelPaytmCustomUi extends PaytmCustomUiPlatform {
       'isEligibleForCoFT': isEligibleForCoFT,
       'isUserConsentGiven': isUserConsentGiven,
       'isCardPTCInfoRequired': isCardPTCInfoRequired,
-      'callbackURL':callbackURL,
+      'callbackURL': callbackURL,
     });
   }
 
   @override
   Future doUpiIntentPayment(
-      String mid,
-      String orderId,
-      String txnToken,
-      num amount,
-      String paymentFlow,
-      String appId,
-      ) async{
+    String mid,
+    String orderId,
+    String txnToken,
+    num amount,
+    String paymentFlow,
+    String appId,
+  ) async {
     return await methodChannel.invokeMethod('doUpiIntentPayment', {
       'mid': mid,
       'orderId': orderId,
       'txnToken': txnToken,
       'amount': amount,
       'paymentFlow': paymentFlow,
-      'appId':appId,
+      'appId': appId,
     });
   }
 
   @override
   Future doNBPayment(
-      String mid,
-      String orderId,
-      String txnToken,
-      num amount,
-      String paymentFlow,
-      String bankCode,
-      String callbackURL,
-      )async {
+    String mid,
+    String orderId,
+    String txnToken,
+    num amount,
+    String paymentFlow,
+    String bankCode,
+    String callbackURL,
+  ) async {
     return await methodChannel.invokeMethod('doNBPayment', {
       'mid': mid,
       'orderId': orderId,
       'txnToken': txnToken,
       'amount': amount,
       'paymentFlow': paymentFlow,
-      'bankCode':bankCode,
-      'callbackURL':callbackURL,
-    });  }
+      'bankCode': bankCode,
+      'callbackURL': callbackURL,
+    });
+  }
 
   @override
-  Future getUpiApps() async{
+  Future getUpiApps() async {
     return await methodChannel.invokeMethod('getUpiApps');
+  }
+
+  @override
+  Future setStaging() async {
+    return await methodChannel.invokeMethod('setStaging');
   }
 }

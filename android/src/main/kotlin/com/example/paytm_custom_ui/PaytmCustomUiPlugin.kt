@@ -66,7 +66,10 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     }
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
-        if (call.method == "getPlatformVersion") {
+        if (call.method == "setStaging"){
+            result.success(setStaging())
+        }
+        else if (call.method == "getPlatformVersion") {
             result.success("Android ${android.os.Build.VERSION.RELEASE}")
         } else if (call.method == "isPaytmAppInstalled") {
             result.success(paymentsUtilRepository.isPaytmAppInstalled(context));
@@ -74,7 +77,6 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
             val clientId = call.argument<String>("clientId");
             val mid = call.argument<String>("mid");
             if (clientId != null && mid != null) {
-                PaytmSDK.setServer(Server.STAGING)
                 val res = paymentsUtilRepository.fetchAuthCode(context, clientId, mid);
                 result.success(res)
             } else {

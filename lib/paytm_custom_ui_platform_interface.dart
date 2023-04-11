@@ -54,37 +54,39 @@ abstract class PaytmCustomUiPlatform extends PlatformInterface {
     bool isEligibleForCoFT,
     bool isUserConsentGiven,
     bool isCardPTCInfoRequired,
-      String callbackURL,
-
-      ) {
+    String callbackURL,
+  ) {
     throw UnimplementedError("doCardPayment() has not been implemented");
   }
 
   Future doUpiIntentPayment(
-      String mid,
-      String orderId,
-      String txnToken,
-      num amount,
-      String paymentFlow,
-   String appId,
-      ) {
+    String mid,
+    String orderId,
+    String txnToken,
+    num amount,
+    String paymentFlow,
+    String appId,
+  ) {
     throw UnimplementedError("doCardPayment() has not been implemented");
   }
 
-  Future doNBPayment(
-      String mid,
-      String orderId,
-      String txnToken,
-      num amount,
-      String paymentFlow,
-      String bankCode,
-      String callbackURL,
+  Future setStaging() {
+    throw UnimplementedError("setStaging() has not been implemented");
+  }
 
-      ) {
+  Future doNBPayment(
+    String mid,
+    String orderId,
+    String txnToken,
+    num amount,
+    String paymentFlow,
+    String bankCode,
+    String callbackURL,
+  ) {
     throw UnimplementedError("doNBPayment() has not been implemented");
   }
 
-  Future getUpiApps(){
+  Future getUpiApps() {
     throw UnimplementedError("getUpiApps has not been implemented");
   }
 }
