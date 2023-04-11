@@ -5,7 +5,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'dart:typed_data';
 
 import 'paytm_custom_ui_platform_interface.dart';
 
@@ -87,8 +86,7 @@ class PaytmCustomUi {
     var apps = await PaytmCustomUiPlatform.instance.getUpiApps();
     var jsonData = json.decode(apps);
     var upiApps = (jsonData as List).map((e) {
-      var image = base64.decode(e['image']);
-      return UpiApp(e['id'], e['name'], image);
+      return UpiApp(e['id'], e['name'], e['image']);
     }).toList();
     return upiApps;
   }
@@ -97,9 +95,9 @@ class PaytmCustomUi {
 class UpiApp {
   final String id;
   final String name;
-  final Uint8List image;
+  final String imagebase64;
 
-  UpiApp(this.id, this.name, this.image);
+  UpiApp(this.id, this.name, this.imagebase64);
 }
 
 class PaytmCheckBox extends StatelessWidget {

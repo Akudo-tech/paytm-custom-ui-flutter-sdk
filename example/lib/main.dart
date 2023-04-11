@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -81,21 +83,26 @@ class _MyAppState extends State<MyApp> {
                     children: [
                       ...upiApps!.map(
                         (e) => InkWell(
-                          onTap: ()async{
-                            try{
-                              var res = await PaytmCustomUi().doNBPayment("eciTGc21474090466643", "clg4syogg1009185014mq54fcia7", "b5c583fee2fa42ceb8a0e593d64045f01680766475528", 10, "NONE", "HDFC");
+                          onTap: () async {
+                            try {
+                              var res = await PaytmCustomUi().doNBPayment(
+                                  "eciTGc21474090466643",
+                                  "clg4syogg1009185014mq54fcia7",
+                                  "b5c583fee2fa42ceb8a0e593d64045f01680766475528",
+                                  10,
+                                  "NONE",
+                                  "HDFC",
+                                  "test");
                               // var res =   await PaytmCustomUi().doUpiIntentPayment("eciTGc21474090466643", "clg2d0nez1447207010f42k5v18x", "36dbcdd4e3254b018234ba230b6f12501680618761226", 10, "NONE", e.id);
                               print(res);
-                            }catch(e){
-
+                            } catch (e) {
                               print(e);
                             }
                           },
                           child: Column(
                             children: [
-                              Image.memory(e.image),
+                              Image.memory(base64Decode(e.imagebase64)),
                               Text(e.name),
-
                             ],
                           ),
                         ),
@@ -104,15 +111,18 @@ class _MyAppState extends State<MyApp> {
                   ),
                 ),
               ),
-            ElevatedButton(onPressed: ()async{
-              try{
-                var res = await PaytmCustomUi().fetchAuthCode('merchant-akudo-uat', 'OMrtUM57689555494492');
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  var res = await PaytmCustomUi().fetchAuthCode(
+                      'merchant-akudo-uat', 'OMrtUM57689555494492');
 
-                print(res);
-              }catch(e){
-                print(e);
-              }
-            }, child: Text("do payment"),
+                  print(res);
+                } catch (e) {
+                  print(e);
+                }
+              },
+              child: Text("do payment"),
             )
           ],
         ),
