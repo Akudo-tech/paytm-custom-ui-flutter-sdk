@@ -102,6 +102,7 @@ class MethodChannelPaytmCustomUi extends PaytmCustomUiPlatform {
     String paymentFlow,
     String vpa,
     bool saveVPA,
+    String callbackURL,
   ) async {
     return await methodChannel.invokeMethod('doUpiCollectPayment', {
       'mid': mid,
@@ -111,6 +112,7 @@ class MethodChannelPaytmCustomUi extends PaytmCustomUiPlatform {
       'paymentFlow': paymentFlow,
       'vpa': vpa,
       'saveVPA': saveVPA,
+      'callbackURL': callbackURL,
     });
   }
 

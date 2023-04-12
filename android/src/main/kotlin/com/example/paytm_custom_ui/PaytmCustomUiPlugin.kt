@@ -220,8 +220,12 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 result.error("NULL-VALUE", "saveVPA cant be null", "saveVPA is null")
                 return
             }
+            val callbackURL = call.argument<String>("callbackURL") ?: run {
+                result.error("NULL-VALUE", "callbackURL cant be null", "callbackURL is null")
+                return
+            }
 
-            doUpiCollectPayment(mid,orderId,txnToken,amount.toDouble(),paymentFlow, vpa, saveVPA,result);
+            doUpiCollectPayment(mid,orderId,txnToken,amount.toDouble(),paymentFlow, vpa, saveVPA,callbackURL ,result);
         } else if(call.method == "doNBPayment"){
             val mid = call.argument<String>("mid") ?: run {
                 result.error("NULL-VALUE", "mid cant be null", "mid is null")
@@ -321,8 +325,11 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     }
 
     private fun doUpiCollectPayment(
-            mid: String, orderId: String, txnToken: String, amount: Double, paymentFlow: String, vpa:String, saveVPA:Boolean, result: Result){
-        val sdk = PaytmSDK.Builder(context, mid, orderId, txnToken, amount, PayTMResultsListener(result) ).build()
+            mid: String, orderId: String, txnToken: String, amount: Double, paymentFlow: String, vpa:String, saveVPA:Boolean,callbackURL:String, result: Result){
+        val sdkbuilder = PaytmSDK.Builder(context, mid, orderId, txnToken, amount, PayTMResultsListener(result) )
+
+        sdkbuilder.setMerchantCallbackUrl(callbackURL)
+        val sdk = sdkbuilder.build()
         sdk.startTransaction(context,UpiCollectRequestModel(paymentFlow,vpa,saveVPA))
     }
 

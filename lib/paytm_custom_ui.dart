@@ -103,9 +103,10 @@ class PaytmCustomUi {
     String paymentFlow,
     String vpa,
     bool saveVPA,
+    String callbackURL,
   ) async {
     return await PaytmCustomUiPlatform.instance.doUpiCollectPayment(
-        mid, orderId, txnToken, amount, paymentFlow, vpa, saveVPA);
+        mid, orderId, txnToken, amount, paymentFlow, vpa, saveVPA, callbackURL);
   }
 }
 
