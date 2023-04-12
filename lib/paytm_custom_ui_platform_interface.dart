@@ -70,6 +70,18 @@ abstract class PaytmCustomUiPlatform extends PlatformInterface {
     throw UnimplementedError("doCardPayment() has not been implemented");
   }
 
+  Future doUpiCollectPayment(
+    String mid,
+    String orderId,
+    String txnToken,
+    num amount,
+    String paymentFlow,
+    String vpa,
+    bool saveVPA,
+  ) {
+    throw UnimplementedError("doCardPayment() has not been implemented");
+  }
+
   Future setStaging() {
     throw UnimplementedError("setStaging() has not been implemented");
   }

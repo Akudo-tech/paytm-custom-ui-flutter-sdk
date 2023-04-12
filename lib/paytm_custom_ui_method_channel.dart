@@ -94,6 +94,27 @@ class MethodChannelPaytmCustomUi extends PaytmCustomUiPlatform {
   }
 
   @override
+  Future doUpiCollectPayment(
+    String mid,
+    String orderId,
+    String txnToken,
+    num amount,
+    String paymentFlow,
+    String vpa,
+    bool saveVPA,
+  ) async {
+    return await methodChannel.invokeMethod('doUpiCollectPayment', {
+      'mid': mid,
+      'orderId': orderId,
+      'txnToken': txnToken,
+      'amount': amount,
+      'paymentFlow': paymentFlow,
+      'vpa': vpa,
+      'saveVPA': saveVPA,
+    });
+  }
+
+  @override
   Future doNBPayment(
     String mid,
     String orderId,

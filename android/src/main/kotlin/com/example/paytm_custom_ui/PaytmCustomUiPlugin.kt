@@ -1,6 +1,5 @@
 package com.example.paytm_custom_ui
 
-import android.R.attr.bitmap
 import android.app.ActionBar.LayoutParams
 import android.app.Application
 import android.content.Context
@@ -34,7 +33,6 @@ import net.one97.paytm.nativesdk.dataSource.models.UpiCollectRequestModel
 import net.one97.paytm.nativesdk.dataSource.models.UpiIntentRequestModel
 import net.one97.paytm.nativesdk.transcation.model.TransactionInfo
 import java.io.ByteArrayOutputStream
-import java.util.Base64
 
 
 /** PaytmCustomUiPlugin */
@@ -193,6 +191,37 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 return
             }
             doUpiIntentPayment(mid,orderId,txnToken,amount.toDouble(),appId,paymentFlow,result)
+        }  else if(call.method == "doUpiCollectPayment"){
+            val mid = call.argument<String>("mid") ?: run {
+                result.error("NULL-VALUE", "mid cant be null", "mid is null")
+                return
+            }
+            val orderId = call.argument<String>("orderId") ?: run {
+                result.error("NULL-VALUE", "orderId cant be null", "orderId is null")
+                return
+            }
+            val txnToken = call.argument<String>("txnToken") ?: run {
+                result.error("NULL-VALUE", "orderId cant be null", "orderId is null")
+                return
+            }
+            val amount = call.argument<Number>("amount") ?: run {
+                result.error("NULL-VALUE", "amount cant be null", "amount is null")
+                return
+            }
+            val paymentFlow = call.argument<String>("paymentFlow") ?: run {
+                result.error("NULL-VALUE", "paymentFlow cant be null", "paymentFlow is null")
+                return
+            }
+            val vpa = call.argument<String>("vpa") ?: run {
+                result.error("NULL-VALUE", "vpa cant be null", "vpa is null")
+                return
+            }
+            val saveVPA = call.argument<Boolean>("saveVPA") ?: run {
+                result.error("NULL-VALUE", "saveVPA cant be null", "saveVPA is null")
+                return
+            }
+
+            doUpiCollectPayment(mid,orderId,txnToken,amount.toDouble(),paymentFlow, vpa, saveVPA,result);
         } else if(call.method == "doNBPayment"){
             val mid = call.argument<String>("mid") ?: run {
                 result.error("NULL-VALUE", "mid cant be null", "mid is null")
@@ -289,6 +318,12 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         var app = PaytmSDK.getPaymentsHelper().getUpiAppsInstalled(context).first { it.resolveInfo.activityInfo.packageName==appId }
         val sdk = PaytmSDK.Builder(context, mid, orderId, txnToken, amount, PayTMResultsListener(result) ).build()
         sdk.startTransaction(context,UpiIntentRequestModel(paymentFlow,app.appName,app.resolveInfo.activityInfo))
+    }
+
+    private fun doUpiCollectPayment(
+            mid: String, orderId: String, txnToken: String, amount: Double, paymentFlow: String, vpa:String, saveVPA:Boolean, result: Result){
+        val sdk = PaytmSDK.Builder(context, mid, orderId, txnToken, amount, PayTMResultsListener(result) ).build()
+        sdk.startTransaction(context,UpiCollectRequestModel(paymentFlow,vpa,saveVPA))
     }
 
     private fun doNBPayment(mid: String, orderId: String, txnToken: String, amount: Double, bankCode: String, paymentFlow: String, callbackURL:String, result: Result){

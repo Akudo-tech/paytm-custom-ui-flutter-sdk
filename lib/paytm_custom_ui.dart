@@ -94,6 +94,19 @@ class PaytmCustomUi {
   Future setStaging() async {
     return await PaytmCustomUiPlatform.instance.setStaging();
   }
+
+  Future doUpiCollectPayment(
+    String mid,
+    String orderId,
+    String txnToken,
+    num amount,
+    String paymentFlow,
+    String vpa,
+    bool saveVPA,
+  ) async {
+    return await PaytmCustomUiPlatform.instance.doUpiCollectPayment(
+        mid, orderId, txnToken, amount, paymentFlow, vpa, saveVPA);
+  }
 }
 
 class UpiApp {

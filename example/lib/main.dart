@@ -85,15 +85,21 @@ class _MyAppState extends State<MyApp> {
                         (e) => InkWell(
                           onTap: () async {
                             try {
-                              var res = await PaytmCustomUi().doNBPayment(
+                              // var res = await PaytmCustomUi().doNBPayment(
+                              //     "eciTGc21474090466643",
+                              //     "clg4syogg1009185014mq54fcia7",
+                              //     "b5c583fee2fa42ceb8a0e593d64045f01680766475528",
+                              //     10,
+                              //     "NONE",
+                              //     "HDFC",
+                              //     "test");
+                              var res = await PaytmCustomUi().doUpiIntentPayment(
                                   "eciTGc21474090466643",
-                                  "clg4syogg1009185014mq54fcia7",
-                                  "b5c583fee2fa42ceb8a0e593d64045f01680766475528",
+                                  "clg2d0nez1447207010f42k5v18x",
+                                  "36dbcdd4e3254b018234ba230b6f12501680618761226",
                                   10,
                                   "NONE",
-                                  "HDFC",
-                                  "test");
-                              // var res =   await PaytmCustomUi().doUpiIntentPayment("eciTGc21474090466643", "clg2d0nez1447207010f42k5v18x", "36dbcdd4e3254b018234ba230b6f12501680618761226", 10, "NONE", e.id);
+                                  e.id);
                               print(res);
                             } catch (e) {
                               print(e);
