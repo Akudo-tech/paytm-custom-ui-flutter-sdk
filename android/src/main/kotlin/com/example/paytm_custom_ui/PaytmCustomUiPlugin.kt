@@ -7,6 +7,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -76,6 +77,7 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
             val clientId = call.argument<String>("clientId");
             val mid = call.argument<String>("mid");
             if (clientId != null && mid != null) {
+                PaytmSDK.setServer(Server.STAGING)
                 val res = paymentsUtilRepository.fetchAuthCode(context, clientId, mid);
                 result.success(res)
             } else {
@@ -303,18 +305,24 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         var appIs = apps.map {
             val imageBitmap = drawableToBitmap(it.drawable)
             var imageString:String? = null
+
             if (imageBitmap != null) {
+
                 val byteArrayOutputStream = ByteArrayOutputStream()
 
                 imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
                 val byteArray: ByteArray = byteArrayOutputStream.toByteArray()
+
                 imageString = android.util.Base64.encodeToString(byteArray,android.util.Base64.NO_WRAP)
+
             }
 
             var app = UpiApp(it.appName,it.resolveInfo.activityInfo.packageName,imageString)
-            app
+            app.toMap()
         }
-       return Gson().toJson(appIs)
+        val jsonConverted = Gson().toJson(appIs)
+
+        return jsonConverted
     }
 
     private fun doUpiIntentPayment(
@@ -386,26 +394,36 @@ class PayTMResultsListener(private val result: Result):PaytmSDKCallbackListener{
 
 }
 
-fun drawableToBitmap(drawable: Drawable): Bitmap? {
-    var bitmap: Bitmap? = null
+fun drawableToBitmap(drawable: Drawable): Bitmap {
     if (drawable is BitmapDrawable) {
         val bitmapDrawable: BitmapDrawable = drawable as BitmapDrawable
         if (bitmapDrawable.bitmap != null) {
+
             return bitmapDrawable.bitmap
         }
     }
-    bitmap = if (drawable.intrinsicWidth <= 0 || drawable.intrinsicHeight <= 0) {
+
+    var bitmap: Bitmap = if (drawable.intrinsicWidth <= 0 || drawable.intrinsicHeight <= 0) {
+
         Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888) // Single color bitmap will be created of 1x1 pixel
     } else {
+
         Bitmap.createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight, Bitmap.Config.ARGB_8888)
     }
+
     val canvas = Canvas(bitmap)
-    drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight())
+
+    drawable.setBounds(0, 0, canvas.width, canvas.height)
+
     drawable.draw(canvas)
     return bitmap
 }
 
-class UpiApp(val name:String, val id:String, val image: String?)
+class UpiApp(val name:String, val id:String, val image: String?){
+    public fun toMap(): Map<String, String?> {
+        return mapOf("id" to id, "name" to name, "image" to image)
+    }
+}
 
 class NativeViewFactory : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
     override fun create(context: Context, viewId: Int, args: Any?): PlatformView {
