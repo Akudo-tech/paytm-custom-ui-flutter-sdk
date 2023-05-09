@@ -77,7 +77,6 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
             val clientId = call.argument<String>("clientId");
             val mid = call.argument<String>("mid");
             if (clientId != null && mid != null) {
-                PaytmSDK.setServer(Server.STAGING)
                 val res = paymentsUtilRepository.fetchAuthCode(context, clientId, mid);
                 result.success(res)
             } else {
