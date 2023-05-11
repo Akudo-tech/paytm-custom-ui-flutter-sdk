@@ -1,5 +1,9 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
 import 'paytm_custom_ui_platform_interface.dart';
 
@@ -83,14 +87,30 @@ class MethodChannelPaytmCustomUi extends PaytmCustomUiPlatform {
     String paymentFlow,
     String appId,
   ) async {
-    return await methodChannel.invokeMethod('doUpiIntentPayment', {
-      'mid': mid,
-      'orderId': orderId,
-      'txnToken': txnToken,
-      'amount': amount,
-      'paymentFlow': paymentFlow,
-      'appId': appId,
-    });
+    if (Platform.isAndroid) {
+      return await methodChannel.invokeMethod('doUpiIntentPayment', {
+        'mid': mid,
+        'orderId': orderId,
+        'txnToken': txnToken,
+        'amount': amount,
+        'paymentFlow': paymentFlow,
+        'appId': appId,
+      });
+    } else {
+      var res = await methodChannel.invokeMethod('doUpiIntentPayment', {
+        'mid': mid,
+        'orderId': orderId,
+        'txnToken': txnToken,
+        'amount': amount,
+        'paymentFlow': paymentFlow,
+        'appId': appId,
+      });
+      if (res == true) {
+        var response = Completer();
+        WidgetsBinding.instance.addObserver(ResponderApp(response));
+        return response.future;
+      }
+    }
   }
 
   @override
@@ -145,5 +165,26 @@ class MethodChannelPaytmCustomUi extends PaytmCustomUiPlatform {
   @override
   Future setStaging() async {
     return await methodChannel.invokeMethod('setStaging');
+  }
+}
+
+class ResponderApp extends WidgetsBindingObserver {
+  final Completer completer;
+
+  ResponderApp(this.completer);
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (completer.isCompleted) {
+      return;
+    }
+    if (state == AppLifecycleState.resumed) {
+      completer.complete({
+        "resultInfo": {
+          "resultStatus": "UNKNOWN",
+          "resultMsg": "UPI ON iOS status unknown"
+        }
+      });
+    }
   }
 }

@@ -14,6 +14,10 @@ A new Flutter plugin project.
   s.author           = { 'Your Company' => 'email@example.com' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
+  s.preserve_paths = 'PaytmNativeSDK.xcframework/**/*'
+  s.xcconfig = { 'OTHER_LDFLAGS' => '-framework PaytmNativeSDK' }
+  s.vendored_frameworks = 'PaytmNativeSDK.xcframework'
+  s.ios.vendored_frameworks = 'PaytmNativeSDK.xcframework'
   s.dependency 'Flutter'
   s.platform = :ios, '9.0'
 
