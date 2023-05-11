@@ -288,6 +288,7 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     ) {
         val sdkBuilder = PaytmSDK.Builder(context, mid, orderId, txnToken, amount, PayTMResultsListener(result) )
         sdkBuilder.setMerchantCallbackUrl(callbackURL)
+        sdkBuilder.setAssistEnabled(true)
         val sdk = sdkBuilder.build()
         sdk.startTransaction(context,
                 CardRequestModel(paymentMode, paymentFlow,
@@ -344,7 +345,10 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         val sdkbuilder = PaytmSDK.Builder(context, mid, orderId, txnToken, amount, PayTMResultsListener(result) )
 
         sdkbuilder.setMerchantCallbackUrl(callbackURL)
+        sdkbuilder.setAssistEnabled(true)
+
         val sdk = sdkbuilder.build()
+
         sdk.startTransaction(context,NetBankingRequestModel(paymentFlow,bankCode))
     }
 
