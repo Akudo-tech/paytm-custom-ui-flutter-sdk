@@ -22,7 +22,7 @@ public class PaytmCustomUiPlugin: NSObject, FlutterPlugin {
               let bankCode = args["bankCode"] as? String
               let callbackURL = args["callbackURL"] as? String
               
-              let paymentModel = AINativeNBParameterModel(withTransactionToken: txnToken!, orderId: orderId!, shouldOpenNativePlusFlow: false, mid: mid!, flowType: AINativePaymentFlow.none, paymentModes: AINativePaymentModes.netBanking, channelCode: bankCode!, redirectionUrl: callbackURL!)
+              let paymentModel = AINativeNBParameterModel(withTransactionToken: txnToken!, orderId: orderId!, shouldOpenNativePlusFlow: true, mid: mid!, flowType: AINativePaymentFlow.none, paymentModes: AINativePaymentModes.netBanking, channelCode: bankCode!, redirectionUrl: callbackURL!)
               let vc = UIApplication.shared.keyWindow?.rootViewController;
               let del = PaytmDelegate(uiController: vc!, result: result)
               DispatchQueue.main.async {
@@ -42,7 +42,7 @@ public class PaytmCustomUiPlugin: NSObject, FlutterPlugin {
               let appId = args["appId"] as? String
               
               
-              let vc = UIApplication.shared.keyWindow?.rootViewController;
+              let vc = UIApplication.shared.delegate?.window?!.rootViewController;
               let del = PaytmDelegate(uiController: vc!, result: result)
               
               let app:PspApp
@@ -128,7 +128,7 @@ public class PaytmCustomUiPlugin: NSObject, FlutterPlugin {
 
               let callbackURL = args["callbackURL"] as? String
               
-              let newCard = shouldSaveCard==true
+              let newCard = !(shouldSaveCard==true)
               
               let saveInstrument: String
               if shouldSaveCard==true{
@@ -139,7 +139,7 @@ public class PaytmCustomUiPlugin: NSObject, FlutterPlugin {
               let expiryMonth = cardExpiry?.split(separator: "/")[0]
               let expiryYear = cardExpiry?.split(separator: "/")[1]
               let expiry = "\(expiryMonth!)20\(expiryYear!)"
-              let paymentModel = AITokenizeCardParameterModel(withTransactionToken: txnToken!, orderId: orderId!, shouldOpenNativePlusFlow: false, mid: mid!, flowType: AINativePaymentFlow.none, paymentModes: .debitCard, authMode: PaytmNativeSDK.AuthMode.otp, cardId: cardId, cardNumber: cardNumber, cvv: cardCvv, expiryDate: expiry, newCard:  newCard, saveInstrument: saveInstrument
+              let paymentModel = AINativeSavedCardParameterModel(withTransactionToken: txnToken!, orderId: orderId!, shouldOpenNativePlusFlow: false, mid: mid!, flowType: AINativePaymentFlow.none, paymentModes: .debitCard, authMode: PaytmNativeSDK.AuthMode.otp, cardId: cardId, cardNumber: cardNumber, cvv: cardCvv, expiryDate: expiry, newCard:  true, saveInstrument: "0", redirectionUrl: callbackURL!
               )
               let vc = UIApplication.shared.keyWindow?.rootViewController;
               let del = PaytmDelegate(uiController: vc!, result: result)
@@ -200,7 +200,7 @@ class PaytmDelegate: AIDelegate {
                 self.result(FlutterError(code: "PAYTM-ERROR-GENERIC", message: "PAYTM-CONTROLLER-EXITED", details: "PAYTM CONTROLLER EXITED"))
             }
         }
-        uiController.present(controller, animated: true)
+        uiController.present(vc, animated: true)
     }
 }
 
