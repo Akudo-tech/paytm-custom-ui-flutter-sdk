@@ -193,14 +193,17 @@ class PaytmDelegate: AIDelegate {
     }
     
     public func openPaymentController(_ controller: UIViewController) {
-        let vc = PaytmViewController()
-        vc.mainView = controller
-        vc.callback = {
-            if !self.responsed{
-                self.result(FlutterError(code: "PAYTM-ERROR-GENERIC", message: "PAYTM-CONTROLLER-EXITED", details: "PAYTM CONTROLLER EXITED"))
-            }
-        }
-        uiController.present(vc, animated: true)
+        controller.modalPresentationStyle = .overFullScreen
+        
+        uiController.present(controller, animated: true)
+//        let vc = PaytmViewController()
+//        vc.mainView = controller
+//        vc.callback = {
+//            if !self.responsed{
+//                self.result(FlutterError(code: "PAYTM-ERROR-GENERIC", message: "PAYTM-CONTROLLER-EXITED", details: "PAYTM CONTROLLER EXITED"))
+//            }
+//        }
+//        uiController.present(vc, animated: true)
     }
 }
 
