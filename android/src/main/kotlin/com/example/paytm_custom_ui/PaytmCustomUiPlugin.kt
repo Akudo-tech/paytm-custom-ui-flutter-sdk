@@ -1,6 +1,7 @@
 package com.example.paytm_custom_ui
 
 import android.app.ActionBar.LayoutParams
+import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.graphics.Bitmap
@@ -48,9 +49,10 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     private val paymentsUtilRepository: PaytmPaymentsUtilRepository =
         PaytmSDK.getPaymentsUtilRepository()
 
-    private lateinit var context: Application;
+    private lateinit var activity: Activity;
 
     private var isStaging =false
+    private var isConnected = false
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
 
@@ -58,9 +60,9 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         channel.setMethodCallHandler(this)
         flutterPluginBinding.applicationContext.let {
             val app = flutterPluginBinding.applicationContext as Application?
-            if (app != null) {
-                context = app
-            }
+//            if (app != null) {
+//                context = app
+//            }
             PaytmSDK.init(app)
         }
         flutterPluginBinding
@@ -77,12 +79,12 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         } else if (call.method == "getPlatformVersion") {
             result.success("Android ${android.os.Build.VERSION.RELEASE}")
         } else if (call.method == "isPaytmAppInstalled") {
-            result.success(paymentsUtilRepository.isPaytmAppInstalled(context));
+            result.success(paymentsUtilRepository.isPaytmAppInstalled(activity));
         } else if (call.method == "fetchAuthCode") {
             val clientId = call.argument<String>("clientId");
             val mid = call.argument<String>("mid");
             if (clientId != null && mid != null) {
-                val res = paymentsUtilRepository.fetchAuthCode(context, clientId, mid);
+                val res = paymentsUtilRepository.fetchAuthCode(activity, clientId, mid);
                 result.success(res)
             } else {
                 result.error(
@@ -317,6 +319,7 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
+        isConnected=false
     }
 
 
@@ -339,20 +342,20 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         isCardPTCInfoRequired: Boolean,
         result: Result,
     ) {
-        var listener = PayTMResultsListener(context,result,mid,orderId,txnToken,amount,
+        var listener = PayTMResultsListener(activity,result,mid,orderId,txnToken,amount,
             if (isStaging) Server.STAGING
         else Server.PRODUCTION,
             callbackURL
             )
         val sdkBuilder =
-            PaytmSDK.Builder(context, mid, orderId, txnToken, amount, listener)
+            PaytmSDK.Builder(activity, mid, orderId, txnToken, amount, listener)
 
         sdkBuilder.setMerchantCallbackUrl(callbackURL)
         sdkBuilder.setAssistEnabled(true)
         val sdk = sdkBuilder.build()
         listener.sdk=sdk
         sdk.startTransaction(
-            context,
+            activity,
             CardRequestModel(
                 paymentMode, paymentFlow,
                 cardNumber, cardId, cardCvv, cardExpiry, bankCode, channelCode, authMode, emiPlanId,
@@ -365,7 +368,7 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
 
     private fun getUpiApps(result: Result) {
-         PaytmSDK.getPaymentsHelper().getUpiAppsInstalled(context,
+         PaytmSDK.getPaymentsHelper().getUpiAppsInstalled(activity,
             object : UpiAppListListener {
                 override fun onUpiAppsListFetched(upiAppsInstalled: ArrayList<UpiOptionsModel>) {
                     var appIs = upiAppsInstalled.map {
@@ -414,32 +417,34 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         callbackURL: String,
         result: Result
     ) {
-        PaytmSDK.getPaymentsHelper().getUpiAppsInstalled(context,
+        PaytmSDK.getPaymentsHelper().getUpiAppsInstalled(activity,
             object : UpiAppListListener {
                 override fun onUpiAppsListFetched(upiAppsInstalled: ArrayList<UpiOptionsModel>) {
                     val app =
                         upiAppsInstalled.first { it.resolveInfo.activityInfo.packageName == appId }
 
-                    var listener =
-                        PayTMResultsListener(context, result,mid,orderId,txnToken,amount, if (isStaging) Server.STAGING
-                        else Server.PRODUCTION,callbackURL)
-                    val sdk = PaytmSDK.Builder(
-                        context,
-                        mid,
-                        orderId,
-                        txnToken,
-                        amount,
-                        listener
-                    ).build()
-                    listener.sdk = sdk
-                    sdk.startTransaction(
-                        context,
-                        UpiIntentRequestModel(
-                            paymentFlow,
-                            app.appName,
-                            app.resolveInfo.activityInfo
+                    activity.runOnUiThread {
+                        var listener =
+                            PayTMResultsListener(activity, result,mid,orderId,txnToken,amount, if (isStaging) Server.STAGING
+                            else Server.PRODUCTION,callbackURL)
+                        val sdk = PaytmSDK.Builder(
+                            activity,
+                            mid,
+                            orderId,
+                            txnToken,
+                            amount,
+                            listener
+                        ).build()
+                        listener.sdk = sdk
+                        sdk.startTransaction(
+                            activity,
+                            UpiIntentRequestModel(
+                                paymentFlow,
+                                app.appName,
+                                app.resolveInfo.activityInfo
+                            )
                         )
-                    )
+                    }
                 }
 
             }
@@ -458,15 +463,15 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         callbackURL: String,
         result: Result
     ) {
-        var listener = PayTMResultsListener(context, result,mid,orderId,txnToken,amount, if (isStaging) Server.STAGING
+        var listener = PayTMResultsListener(activity, result,mid,orderId,txnToken,amount, if (isStaging) Server.STAGING
         else Server.PRODUCTION,callbackURL)
         val sdkbuilder =
-            PaytmSDK.Builder(context, mid, orderId, txnToken, amount, listener )
+            PaytmSDK.Builder(activity, mid, orderId, txnToken, amount, listener )
 
         sdkbuilder.setMerchantCallbackUrl(callbackURL)
         val sdk = sdkbuilder.build()
         listener.sdk = sdk
-        sdk.startTransaction(context, UpiCollectRequestModel(paymentFlow, vpa, saveVPA))
+        sdk.startTransaction(activity, UpiCollectRequestModel(paymentFlow, vpa, saveVPA))
     }
 
     private fun doNBPayment(
@@ -479,10 +484,10 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         callbackURL: String,
         result: Result
     ) {
-        var listener = PayTMResultsListener(context, result,mid,orderId,txnToken,amount, if (isStaging) Server.STAGING
+        var listener = PayTMResultsListener(activity, result,mid,orderId,txnToken,amount, if (isStaging) Server.STAGING
         else Server.PRODUCTION,callbackURL)
         val sdkbuilder =
-            PaytmSDK.Builder(context, mid, orderId, txnToken, amount,listener )
+            PaytmSDK.Builder(activity, mid, orderId, txnToken, amount,listener )
 
         sdkbuilder.setMerchantCallbackUrl(callbackURL)
         sdkbuilder.setAssistEnabled(true)
@@ -490,7 +495,7 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         val sdk = sdkbuilder.build()
         listener.sdk = sdk
 
-        sdk.startTransaction(context, NetBankingRequestModel(paymentFlow, bankCode))
+        sdk.startTransaction(activity, NetBankingRequestModel(paymentFlow, bankCode))
     }
 
     private fun setStaging() {
@@ -498,7 +503,8 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-//        context = binding.activity
+        activity = binding.activity
+        isConnected=true
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
@@ -509,61 +515,71 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     }
 
     override fun onDetachedFromActivity() {
+        isConnected=false
     }
 
-}
 
-class PayTMResultsListener(private val context: Application, private val result: Result,
-    private val mid: String,
-                           private val orderId: String,
-                           private val txnToken: String,
-                           private val amount: Double,
-                           private val server: Server,
-                           private val merchantCallBack: String
-                           ) : PaytmSDKCallbackListener {
 
-    public var sdk:PaytmSDK? = null
 
-    override fun networkError() {
+    inner
+    class PayTMResultsListener(private val context: Activity, private val result: Result,
+                               private val mid: String,
+                               private val orderId: String,
+                               private val txnToken: String,
+                               private val amount: Double,
+                               private val server: Server,
+                               private val merchantCallBack: String
+    ) : PaytmSDKCallbackListener {
 
-        result.error(
-            "PAYTM-NETWORK-ERROR",
-            "Paytm Reported Network Error",
-            "Paytm Reported Network Error"
-        )
-        PaytmSDK.clearPaytmSDKData()
-    }
+        public var sdk:PaytmSDK? = null
 
-    override fun onBackPressedCancelTransaction() {
-        result.error(
-            "PAYTM-BACK-CANCELLED",
-            "Paytm Reported BACK Cancel Transaction",
-            "Paytm Reported BACK Cancel Transaction"
-        )
-        PaytmSDK.clearPaytmSDKData()
-    }
+        override fun networkError() {
 
-    override fun onGenericError(p0: Int, p1: String?) {
-        // 1001 - mid, orderid, txnToken null -> reinitializeParamenters
-        // 1002 - static instance is null -> PaytmSDK.init
-        // 1003 - close SDK
-        // 1004 - onGenericError exception
-
-        if(p0==1001 && sdk!=null){
-            sdk!!.reInitialiseSdkParams(context,mid,orderId,txnToken,amount,server,merchantCallBack)
-        }else if(p0==1002){
-            PaytmSDK.init(context)
-        }else{
-            result.error("PAYTM-ERROR-GENERIC", "PAYTM Reported error code $p0 message $p1", "$p1")
+            result.error(
+                "PAYTM-NETWORK-ERROR",
+                "Paytm Reported Network Error",
+                "Paytm Reported Network Error"
+            )
             PaytmSDK.clearPaytmSDKData()
         }
 
-    }
+        override fun onBackPressedCancelTransaction() {
+            result.error(
+                "PAYTM-BACK-CANCELLED",
+                "Paytm Reported BACK Cancel Transaction",
+                "Paytm Reported BACK Cancel Transaction"
+            )
+            PaytmSDK.clearPaytmSDKData()
+        }
 
-    override fun onTransactionResponse(p0: TransactionInfo?) {
-        val json = Gson().toJson(p0)
-        result.success(json)
-        PaytmSDK.clearPaytmSDKData()
+        override fun onGenericError(p0: Int, p1: String?) {
+            // 1001 - mid, orderid, txnToken null -> reinitializeParamenters
+            // 1002 - static instance is null -> PaytmSDK.init
+            // 1003 - close SDK
+            // 1004 - onGenericError exception
+
+            if(p0==1001 && sdk!=null){
+                sdk!!.reInitialiseSdkParams(context,mid,orderId,txnToken,amount,server,merchantCallBack)
+            }else if(p0==1002){
+                PaytmSDK.init(context.application)
+            }else{
+               if(isConnected){
+                   result.error("PAYTM-ERROR-GENERIC", "PAYTM Reported error code $p0 message $p1", "$p1")
+
+               }
+                PaytmSDK.clearPaytmSDKData()
+            }
+
+        }
+
+        override fun onTransactionResponse(p0: TransactionInfo?) {
+            val json = Gson().toJson(p0)
+            if(isConnected) {
+                result.success(json)
+            }
+            PaytmSDK.clearPaytmSDKData()
+        }
+
     }
 
 }
