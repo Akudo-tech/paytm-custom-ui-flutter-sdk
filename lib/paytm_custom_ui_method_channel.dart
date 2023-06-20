@@ -86,6 +86,7 @@ class MethodChannelPaytmCustomUi extends PaytmCustomUiPlatform {
     num amount,
     String paymentFlow,
     String appId,
+    String callbackURL,
   ) async {
     if (Platform.isAndroid) {
       return await methodChannel.invokeMethod('doUpiIntentPayment', {
@@ -95,6 +96,7 @@ class MethodChannelPaytmCustomUi extends PaytmCustomUiPlatform {
         'amount': amount,
         'paymentFlow': paymentFlow,
         'appId': appId,
+        'callbackURL': callbackURL,
       });
     } else {
       var res = await methodChannel.invokeMethod('doUpiIntentPayment', {
@@ -104,6 +106,7 @@ class MethodChannelPaytmCustomUi extends PaytmCustomUiPlatform {
         'amount': amount,
         'paymentFlow': paymentFlow,
         'appId': appId,
+        'callbackURL': callbackURL,
       });
       if (res == true) {
         var response = Completer();

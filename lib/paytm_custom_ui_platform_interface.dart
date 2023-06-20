@@ -66,6 +66,7 @@ abstract class PaytmCustomUiPlatform extends PlatformInterface {
     num amount,
     String paymentFlow,
     String appId,
+    String callbackURL,
   ) {
     throw UnimplementedError("doCardPayment() has not been implemented");
   }

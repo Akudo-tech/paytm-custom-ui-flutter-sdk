@@ -28,9 +28,17 @@ class PaytmCustomUi {
     num amount,
     String paymentFlow,
     String appId,
+    String callbackURL,
   ) {
-    return PaytmCustomUiPlatform.instance
-        .doUpiIntentPayment(mid, orderId, txnToken, amount, paymentFlow, appId);
+    return PaytmCustomUiPlatform.instance.doUpiIntentPayment(
+      mid,
+      orderId,
+      txnToken,
+      amount,
+      paymentFlow,
+      appId,
+      callbackURL,
+    );
   }
 
   Future doNBPayment(String mid, String orderId, String txnToken, num amount,

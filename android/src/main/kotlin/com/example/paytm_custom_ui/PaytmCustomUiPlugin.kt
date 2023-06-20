@@ -28,10 +28,12 @@ import net.one97.paytm.nativesdk.Utils.Server
 import net.one97.paytm.nativesdk.app.PaytmSDKCallbackListener
 import net.one97.paytm.nativesdk.common.widget.PaytmConsentCheckBox
 import net.one97.paytm.nativesdk.dataSource.PaytmPaymentsUtilRepository
+import net.one97.paytm.nativesdk.dataSource.UpiAppListListener
 import net.one97.paytm.nativesdk.dataSource.models.CardRequestModel
 import net.one97.paytm.nativesdk.dataSource.models.NetBankingRequestModel
 import net.one97.paytm.nativesdk.dataSource.models.UpiCollectRequestModel
 import net.one97.paytm.nativesdk.dataSource.models.UpiIntentRequestModel
+import net.one97.paytm.nativesdk.instruments.upicollect.models.UpiOptionsModel
 import net.one97.paytm.nativesdk.transcation.model.TransactionInfo
 import java.io.ByteArrayOutputStream
 
@@ -43,9 +45,12 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     /// This local reference serves to register the plugin with the Flutter Engine and unregister it
     /// when the Flutter Engine is detached from the Activity
     private lateinit var channel: MethodChannel
-    private val paymentsUtilRepository: PaytmPaymentsUtilRepository = PaytmSDK.getPaymentsUtilRepository()
+    private val paymentsUtilRepository: PaytmPaymentsUtilRepository =
+        PaytmSDK.getPaymentsUtilRepository()
 
-    private lateinit var context: Context;
+    private lateinit var context: Application;
+
+    private var isStaging =false
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
 
@@ -59,17 +64,17 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
             PaytmSDK.init(app)
         }
         flutterPluginBinding
-                .platformViewRegistry
-                .registerViewFactory("paytm_custom_ui-checkbox", NativeViewFactory())
+            .platformViewRegistry
+            .registerViewFactory("paytm_custom_ui-checkbox", NativeViewFactory())
 
     }
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
-        if (call.method == "setStaging"){
+        if (call.method == "setStaging") {
             setStaging()
+            isStaging=true
             result.success(true)
-        }
-        else if (call.method == "getPlatformVersion") {
+        } else if (call.method == "getPlatformVersion") {
             result.success("Android ${android.os.Build.VERSION.RELEASE}")
         } else if (call.method == "isPaytmAppInstalled") {
             result.success(paymentsUtilRepository.isPaytmAppInstalled(context));
@@ -80,9 +85,13 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 val res = paymentsUtilRepository.fetchAuthCode(context, clientId, mid);
                 result.success(res)
             } else {
-                result.error("EC-PAYTM-REQ-VAL-NULL", "client id or mid null", "client id or mid null")
+                result.error(
+                    "EC-PAYTM-REQ-VAL-NULL",
+                    "client id or mid null",
+                    "client id or mid null"
+                )
             }
-        }  else if (call.method == "doCardPayment") {
+        } else if (call.method == "doCardPayment") {
 
             val mid = call.argument<String>("mid") ?: run {
                 result.error("NULL-VALUE", "mid cant be null", "mid is null")
@@ -113,15 +122,27 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 return
             }
             val isEligibleForCoFT = call.argument<Boolean>("isEligibleForCoFT") ?: run {
-                result.error("NULL-VALUE", "isEligibleForCoFT cant be null", "isEligibleForCoFT is null")
+                result.error(
+                    "NULL-VALUE",
+                    "isEligibleForCoFT cant be null",
+                    "isEligibleForCoFT is null"
+                )
                 return
             }
             val isUserConsentGiven = call.argument<Boolean>("isUserConsentGiven") ?: run {
-                result.error("NULL-VALUE", "isUserConsentGiven cant be null", "isUserConsentGiven is null")
+                result.error(
+                    "NULL-VALUE",
+                    "isUserConsentGiven cant be null",
+                    "isUserConsentGiven is null"
+                )
                 return
             }
             val isCardPTCInfoRequired = call.argument<Boolean>("isCardPTCInfoRequired") ?: run {
-                result.error("NULL-VALUE", "isCardPTCInfoRequired cant be null", "isCardPTCInfoRequired is null")
+                result.error(
+                    "NULL-VALUE",
+                    "isCardPTCInfoRequired cant be null",
+                    "isCardPTCInfoRequired is null"
+                )
                 return
             }
 
@@ -130,43 +151,42 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 return
             }
             doCardTransaction(
-                    mid,
-                    orderId,
-                    txnToken,
-                    amount.toDouble(),
-                    paymentMode,
-                    paymentFlow,
-                    call.argument("cardNumber"),
+                mid,
+                orderId,
+                txnToken,
+                amount.toDouble(),
+                paymentMode,
+                paymentFlow,
+                call.argument("cardNumber"),
 
-                    call.argument("cardId"),
+                call.argument("cardId"),
 
-                    call.argument("cardCvv"),
+                call.argument("cardCvv"),
 
-                    call.argument("cardExpiry"),
+                call.argument("cardExpiry"),
 
-                    call.argument("bankCode"),
+                call.argument("bankCode"),
 
-                    call.argument("channelCode"),
+                call.argument("channelCode"),
 
-                    call.argument("authMode") ?: run {
-                        result.error("NULL-VALUE", "authMode cant be null", "authMode is null")
-                        return
-                    },
+                call.argument("authMode") ?: run {
+                    result.error("NULL-VALUE", "authMode cant be null", "authMode is null")
+                    return
+                },
 
-                    call.argument("emiPlanId"),
-                    callbackURL,
-                    shouldSaveCard,
-                    isEligibleForCoFT,
-                    isUserConsentGiven,
-                    isCardPTCInfoRequired,
+                call.argument("emiPlanId"),
+                callbackURL,
+                shouldSaveCard,
+                isEligibleForCoFT,
+                isUserConsentGiven,
+                isCardPTCInfoRequired,
 
-                    result
+                result
 
             )
         } else if (call.method == "getUpiApps") {
-            val apps = getUpiApps()
-            result.success(apps)
-        } else if(call.method == "doUpiIntentPayment"){
+            val apps = getUpiApps(result)
+        } else if (call.method == "doUpiIntentPayment") {
             val mid = call.argument<String>("mid") ?: run {
                 result.error("NULL-VALUE", "mid cant be null", "mid is null")
                 return
@@ -191,8 +211,22 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 result.error("NULL-VALUE", "appId cant be null", "appId is null")
                 return
             }
-            doUpiIntentPayment(mid,orderId,txnToken,amount.toDouble(),appId,paymentFlow,result)
-        }  else if(call.method == "doUpiCollectPayment"){
+            val callbackURL = call.argument<String>("callbackURL") ?: run {
+                result.error("NULL-VALUE", "callbackURL cant be null", "callbackURL is null")
+                return
+            }
+            doUpiIntentPayment(
+                mid,
+                orderId,
+                txnToken,
+                amount.toDouble(),
+                appId,
+                paymentFlow,
+
+                callbackURL,
+                result,
+            )
+        } else if (call.method == "doUpiCollectPayment") {
             val mid = call.argument<String>("mid") ?: run {
                 result.error("NULL-VALUE", "mid cant be null", "mid is null")
                 return
@@ -226,8 +260,18 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 return
             }
 
-            doUpiCollectPayment(mid,orderId,txnToken,amount.toDouble(),paymentFlow, vpa, saveVPA,callbackURL ,result);
-        } else if(call.method == "doNBPayment"){
+            doUpiCollectPayment(
+                mid,
+                orderId,
+                txnToken,
+                amount.toDouble(),
+                paymentFlow,
+                vpa,
+                saveVPA,
+                callbackURL,
+                result
+            );
+        } else if (call.method == "doNBPayment") {
             val mid = call.argument<String>("mid") ?: run {
                 result.error("NULL-VALUE", "mid cant be null", "mid is null")
                 return
@@ -256,7 +300,16 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 result.error("NULL-VALUE", "callbackURL cant be null", "callbackURL is null")
                 return
             }
-            doNBPayment(mid,orderId,txnToken,amount.toDouble(),bankCode,paymentFlow,callbackURL,result)
+            doNBPayment(
+                mid,
+                orderId,
+                txnToken,
+                amount.toDouble(),
+                bankCode,
+                paymentFlow,
+                callbackURL,
+                result
+            )
         } else {
             result.notImplemented()
         }
@@ -268,96 +321,184 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
 
     private fun doCardTransaction(
-            mid: String, orderId: String, txnToken: String, amount: Double,
-            paymentMode: String,
-            paymentFlow: String,
-            cardNumber: String?,
-            cardId: String?,
-            cardCvv: String?,
-            cardExpiry: String?,
-            bankCode: String?,
-            channelCode: String?,
-            authMode: String,
-            emiPlanId: String?,
-            callbackURL: String,
-            shouldSaveCard: Boolean,
-            isEligibleForCoFT: Boolean,
-            isUserConsentGiven: Boolean,
-            isCardPTCInfoRequired: Boolean,
-            result: Result,
+        mid: String, orderId: String, txnToken: String, amount: Double,
+        paymentMode: String,
+        paymentFlow: String,
+        cardNumber: String?,
+        cardId: String?,
+        cardCvv: String?,
+        cardExpiry: String?,
+        bankCode: String?,
+        channelCode: String?,
+        authMode: String,
+        emiPlanId: String?,
+        callbackURL: String,
+        shouldSaveCard: Boolean,
+        isEligibleForCoFT: Boolean,
+        isUserConsentGiven: Boolean,
+        isCardPTCInfoRequired: Boolean,
+        result: Result,
     ) {
-        val sdkBuilder = PaytmSDK.Builder(context, mid, orderId, txnToken, amount, PayTMResultsListener(result) )
+        var listener = PayTMResultsListener(context,result,mid,orderId,txnToken,amount,
+            if (isStaging) Server.STAGING
+        else Server.PRODUCTION,
+            callbackURL
+            )
+        val sdkBuilder =
+            PaytmSDK.Builder(context, mid, orderId, txnToken, amount, listener)
+
         sdkBuilder.setMerchantCallbackUrl(callbackURL)
         sdkBuilder.setAssistEnabled(true)
         val sdk = sdkBuilder.build()
-        sdk.startTransaction(context,
-                CardRequestModel(paymentMode, paymentFlow,
-                        cardNumber, cardId, cardCvv, cardExpiry, bankCode, channelCode, authMode, emiPlanId,
-                        shouldSaveCard, isEligibleForCoFT, isUserConsentGiven, isCardPTCInfoRequired)
+        listener.sdk=sdk
+        sdk.startTransaction(
+            context,
+            CardRequestModel(
+                paymentMode, paymentFlow,
+                cardNumber, cardId, cardCvv, cardExpiry, bankCode, channelCode, authMode, emiPlanId,
+                shouldSaveCard, isEligibleForCoFT, isUserConsentGiven, isCardPTCInfoRequired
+            )
 
         )
 
     }
 
 
-    private fun getUpiApps(): String {
-        var apps = PaytmSDK.getPaymentsHelper().getUpiAppsInstalled(context)
-        var appIs = apps.map {
-            val imageBitmap = drawableToBitmap(it.drawable)
-            var imageString:String? = null
+    private fun getUpiApps(result: Result) {
+         PaytmSDK.getPaymentsHelper().getUpiAppsInstalled(context,
+            object : UpiAppListListener {
+                override fun onUpiAppsListFetched(upiAppsInstalled: ArrayList<UpiOptionsModel>) {
+                    var appIs = upiAppsInstalled.map {
+                        val imageBitmap = drawableToBitmap(it.drawable)
+                        var imageString: String? = null
 
-            if (imageBitmap != null) {
+                        if (imageBitmap != null) {
 
-                val byteArrayOutputStream = ByteArrayOutputStream()
+                            val byteArrayOutputStream = ByteArrayOutputStream()
 
-                imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
-                val byteArray: ByteArray = byteArrayOutputStream.toByteArray()
+                            imageBitmap.compress(
+                                Bitmap.CompressFormat.PNG,
+                                100,
+                                byteArrayOutputStream
+                            )
+                            val byteArray: ByteArray = byteArrayOutputStream.toByteArray()
 
-                imageString = android.util.Base64.encodeToString(byteArray,android.util.Base64.NO_WRAP)
+                            imageString = android.util.Base64.encodeToString(
+                                byteArray,
+                                android.util.Base64.NO_WRAP
+                            )
+
+                        }
+
+                        var app =
+                            UpiApp(it.appName, it.resolveInfo.activityInfo.packageName, imageString)
+                        app.toMap()
+                    }
+                    val jsonConverted = Gson().toJson(appIs)
+
+                    result.success(jsonConverted)
+                }
 
             }
+        )
 
-            var app = UpiApp(it.appName,it.resolveInfo.activityInfo.packageName,imageString)
-            app.toMap()
-        }
-        val jsonConverted = Gson().toJson(appIs)
-
-        return jsonConverted
     }
 
     private fun doUpiIntentPayment(
-            mid: String, orderId: String, txnToken: String, amount: Double, appId: String, paymentFlow: String, result: Result){
-        var app = PaytmSDK.getPaymentsHelper().getUpiAppsInstalled(context).first { it.resolveInfo.activityInfo.packageName==appId }
-        val sdk = PaytmSDK.Builder(context, mid, orderId, txnToken, amount, PayTMResultsListener(result) ).build()
-        sdk.startTransaction(context,UpiIntentRequestModel(paymentFlow,app.appName,app.resolveInfo.activityInfo))
+        mid: String,
+        orderId: String,
+        txnToken: String,
+        amount: Double,
+        appId: String,
+        paymentFlow: String,
+        callbackURL: String,
+        result: Result
+    ) {
+        PaytmSDK.getPaymentsHelper().getUpiAppsInstalled(context,
+            object : UpiAppListListener {
+                override fun onUpiAppsListFetched(upiAppsInstalled: ArrayList<UpiOptionsModel>) {
+                    val app =
+                        upiAppsInstalled.first { it.resolveInfo.activityInfo.packageName == appId }
+
+                    var listener =
+                        PayTMResultsListener(context, result,mid,orderId,txnToken,amount, if (isStaging) Server.STAGING
+                        else Server.PRODUCTION,callbackURL)
+                    val sdk = PaytmSDK.Builder(
+                        context,
+                        mid,
+                        orderId,
+                        txnToken,
+                        amount,
+                        listener
+                    ).build()
+                    listener.sdk = sdk
+                    sdk.startTransaction(
+                        context,
+                        UpiIntentRequestModel(
+                            paymentFlow,
+                            app.appName,
+                            app.resolveInfo.activityInfo
+                        )
+                    )
+                }
+
+            }
+
+        )
     }
 
     private fun doUpiCollectPayment(
-            mid: String, orderId: String, txnToken: String, amount: Double, paymentFlow: String, vpa:String, saveVPA:Boolean,callbackURL:String, result: Result){
-        val sdkbuilder = PaytmSDK.Builder(context, mid, orderId, txnToken, amount, PayTMResultsListener(result) )
+        mid: String,
+        orderId: String,
+        txnToken: String,
+        amount: Double,
+        paymentFlow: String,
+        vpa: String,
+        saveVPA: Boolean,
+        callbackURL: String,
+        result: Result
+    ) {
+        var listener = PayTMResultsListener(context, result,mid,orderId,txnToken,amount, if (isStaging) Server.STAGING
+        else Server.PRODUCTION,callbackURL)
+        val sdkbuilder =
+            PaytmSDK.Builder(context, mid, orderId, txnToken, amount, listener )
 
         sdkbuilder.setMerchantCallbackUrl(callbackURL)
         val sdk = sdkbuilder.build()
-        sdk.startTransaction(context,UpiCollectRequestModel(paymentFlow,vpa,saveVPA))
+        listener.sdk = sdk
+        sdk.startTransaction(context, UpiCollectRequestModel(paymentFlow, vpa, saveVPA))
     }
 
-    private fun doNBPayment(mid: String, orderId: String, txnToken: String, amount: Double, bankCode: String, paymentFlow: String, callbackURL:String, result: Result){
-        val sdkbuilder = PaytmSDK.Builder(context, mid, orderId, txnToken, amount, PayTMResultsListener(result) )
+    private fun doNBPayment(
+        mid: String,
+        orderId: String,
+        txnToken: String,
+        amount: Double,
+        bankCode: String,
+        paymentFlow: String,
+        callbackURL: String,
+        result: Result
+    ) {
+        var listener = PayTMResultsListener(context, result,mid,orderId,txnToken,amount, if (isStaging) Server.STAGING
+        else Server.PRODUCTION,callbackURL)
+        val sdkbuilder =
+            PaytmSDK.Builder(context, mid, orderId, txnToken, amount,listener )
 
         sdkbuilder.setMerchantCallbackUrl(callbackURL)
         sdkbuilder.setAssistEnabled(true)
 
         val sdk = sdkbuilder.build()
+        listener.sdk = sdk
 
-        sdk.startTransaction(context,NetBankingRequestModel(paymentFlow,bankCode))
+        sdk.startTransaction(context, NetBankingRequestModel(paymentFlow, bankCode))
     }
 
-    private fun setStaging(){
+    private fun setStaging() {
         PaytmSDK.setServer(Server.STAGING)
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-        context = binding.activity
+//        context = binding.activity
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
@@ -372,28 +513,58 @@ class PaytmCustomUiPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
 }
 
-class PayTMResultsListener(private val result: Result):PaytmSDKCallbackListener{
+class PayTMResultsListener(private val context: Application, private val result: Result,
+    private val mid: String,
+                           private val orderId: String,
+                           private val txnToken: String,
+                           private val amount: Double,
+                           private val server: Server,
+                           private val merchantCallBack: String
+                           ) : PaytmSDKCallbackListener {
 
-        override fun networkError() {
-            result.error("PAYTM-NETWORK-ERROR", "Paytm Reported Network Error", "Paytm Reported Network Error")
-            PaytmSDK.clearPaytmSDKData()
-        }
+    public var sdk:PaytmSDK? = null
 
-        override fun onBackPressedCancelTransaction() {
-            result.error("PAYTM-BACK-CANCELLED", "Paytm Reported BACK Cancel Transaction", "Paytm Reported BACK Cancel Transaction")
-            PaytmSDK.clearPaytmSDKData()
-        }
+    override fun networkError() {
 
-        override fun onGenericError(p0: Int, p1: String?) {
+        result.error(
+            "PAYTM-NETWORK-ERROR",
+            "Paytm Reported Network Error",
+            "Paytm Reported Network Error"
+        )
+        PaytmSDK.clearPaytmSDKData()
+    }
+
+    override fun onBackPressedCancelTransaction() {
+        result.error(
+            "PAYTM-BACK-CANCELLED",
+            "Paytm Reported BACK Cancel Transaction",
+            "Paytm Reported BACK Cancel Transaction"
+        )
+        PaytmSDK.clearPaytmSDKData()
+    }
+
+    override fun onGenericError(p0: Int, p1: String?) {
+        // 1001 - mid, orderid, txnToken null -> reinitializeParamenters
+        // 1002 - static instance is null -> PaytmSDK.init
+        // 1003 - close SDK
+        // 1004 - onGenericError exception
+
+        if(p0==1001 && sdk!=null){
+            sdk!!.reInitialiseSdkParams(context,mid,orderId,txnToken,amount,server,merchantCallBack)
+        }else if(p0==1002){
+            PaytmSDK.init(context)
+        }else{
             result.error("PAYTM-ERROR-GENERIC", "PAYTM Reported error code $p0 message $p1", "$p1")
             PaytmSDK.clearPaytmSDKData()
         }
 
-        override fun onTransactionResponse(p0: TransactionInfo?) {
-            val json = Gson().toJson(p0)
-            result.success(json)
-            PaytmSDK.clearPaytmSDKData()
-        }
+    }
+
+    override fun onTransactionResponse(p0: TransactionInfo?) {
+        val json = Gson().toJson(p0)
+        result.success(json)
+        PaytmSDK.clearPaytmSDKData()
+    }
 
 }
 
@@ -408,10 +579,18 @@ fun drawableToBitmap(drawable: Drawable): Bitmap {
 
     var bitmap: Bitmap = if (drawable.intrinsicWidth <= 0 || drawable.intrinsicHeight <= 0) {
 
-        Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888) // Single color bitmap will be created of 1x1 pixel
+        Bitmap.createBitmap(
+            1,
+            1,
+            Bitmap.Config.ARGB_8888
+        ) // Single color bitmap will be created of 1x1 pixel
     } else {
 
-        Bitmap.createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight, Bitmap.Config.ARGB_8888)
+        Bitmap.createBitmap(
+            drawable.intrinsicWidth,
+            drawable.intrinsicHeight,
+            Bitmap.Config.ARGB_8888
+        )
     }
 
     val canvas = Canvas(bitmap)
@@ -422,7 +601,7 @@ fun drawableToBitmap(drawable: Drawable): Bitmap {
     return bitmap
 }
 
-class UpiApp(val name:String, val id:String, val image: String?){
+class UpiApp(val name: String, val id: String, val image: String?) {
     public fun toMap(): Map<String, String?> {
         return mapOf("id" to id, "name" to name, "image" to image)
     }
@@ -434,7 +613,8 @@ class NativeViewFactory : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
         return NativeView(context, viewId, creationParams)
     }
 
-    internal class NativeView(context: Context, id: Int, creationParams: Map<String?, Any?>?) : PlatformView {
+    internal class NativeView(context: Context, id: Int, creationParams: Map<String?, Any?>?) :
+        PlatformView {
         private val view: View
 
         override fun getView(): View {
@@ -446,8 +626,9 @@ class NativeViewFactory : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
         init {
             val merchantName = creationParams?.get("merchant_name")?.toString() ?: "Merchant"
             val layoutInlator = LayoutInflater.from(context)
-            view =  layoutInlator.inflate(R.layout.paytmcheckout,null,false)
-            view.layoutParams = ViewGroup.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
+            view = layoutInlator.inflate(R.layout.paytmcheckout, null, false)
+            view.layoutParams =
+                ViewGroup.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
             (view as PaytmConsentCheckBox).text = "Allow $merchantName to fetch Paytm instruments"
         }
     }
